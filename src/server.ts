@@ -21,7 +21,7 @@ export class Server {
 		this.httpServer = createServer(this.app)
 		this.io = io(this.httpServer, {
 			cors: {
-				origin: 'http://localhost:3000',
+				origin: 'https://video-chat-app-front.vercel.app',
 				methods: ['GET', 'POST'],
 				allowedHeaders: ['my-custom-header']
 			}
