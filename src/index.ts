@@ -8,6 +8,8 @@ const urlOrigin = isDev
 	? 'http://localhost:3000'
 	: 'https://video-chat-app-front.vercel.app'
 
+const port = process.env.PORT || 5000
+
 const io = socketIO(server, {
 	cors: {
 		origin: urlOrigin,
@@ -15,7 +17,6 @@ const io = socketIO(server, {
 		allowedHeaders: ['my-custom-header']
 	}
 })
-// const io = socketIO(server)
 
 app.use('/', (req, res) => {
 	res.send('<div>Server up and running!</div>')
@@ -29,50 +30,40 @@ io.on('connection', (socket) => {
 
 		// These events are emitted only to the sender socket.
 		if (numberOfClients == 0) {
-			console.log(
-				`Creating room ${roomId} and emitting room_created socket event`
-			)
+			console.log(`Creating room:  ${roomId}`)
 			socket.join(roomId)
 			socket.emit('room_created', roomId)
 		} else if (numberOfClients === 1) {
-			console.log(
-				`Joining room ${roomId} and emitting room_joined socket event`
-			)
+			console.log(`Joining room: ${roomId}`)
 			socket.join(roomId)
 			socket.emit('room_joined', roomId)
 		} else {
-			console.log(`Can't join room ${roomId}, emitting full_room socket event`)
+			console.log(`Can't join room: ${roomId}`)
 			socket.emit('full_room', roomId)
 		}
 	})
 
-	// These events are emitted to all the sockets connected to the same room except the sender.
 	socket.on('start_call', (roomId) => {
-		console.log(`Broadcasting start_call event to peers in room ${roomId}`)
+		console.log(`Broadcasting start_call:     ${roomId}`)
 		socket.broadcast.to(roomId).emit('start_call')
 	})
 	socket.on('webrtc_offer', (event) => {
-		console.log(
-			`Broadcasting webrtc_offer event to peers in room ${event.roomId}`
-		)
+		console.log(`Broadcasting webrtc_offer:   ${event.roomId}`)
 		socket.broadcast.to(event.roomId).emit('webrtc_offer', event.sdp)
 	})
 	socket.on('webrtc_answer', (event) => {
-		console.log(
-			`Broadcasting webrtc_answer event to peers in room ${event.roomId}`
-		)
+		console.log(`Broadcasting webrtc_answer:  ${event.roomId}`)
 		socket.broadcast.to(event.roomId).emit('webrtc_answer', event.sdp)
 	})
+	socket.on('stop_video', (roomId) => {
+		console.log(`Broadcasting stop_video:     ${roomId}`)
+		socket.broadcast.to(roomId).emit('stop_video')
+	})
 	socket.on('webrtc_ice_candidate', (event) => {
-		// console.log(
-		// 	`Broadcasting webrtc_ice_candidate event to peers in room ${event.roomId}`
-		// )
 		socket.broadcast.to(event.roomId).emit('webrtc_ice_candidate', event)
 	})
 })
 
-// START THE SERVER =================================================================
-const port = process.env.PORT || 5000
 server.listen(port, () => {
 	console.log(`Express server listening on port ${port}`)
 })
